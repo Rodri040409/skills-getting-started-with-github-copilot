@@ -22,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Clear loading message
       activitiesList.innerHTML = "";
+      // Reset activity select options (keep placeholder)
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -63,6 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
           details.participants.forEach((pEmail) => {
             const li = document.createElement("li");
             li.className = "participant-item";
+            li.dataset.email = pEmail;
+            li.dataset.activity = name;
 
             const avatar = document.createElement("span");
             avatar.className = "avatar";
@@ -74,6 +78,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
             li.appendChild(avatar);
             li.appendChild(emailSpan);
+            // delete button
+            const delBtn = document.createElement("button");
+            delBtn.className = "participant-delete";
+            delBtn.title = "Unregister participant";
+            // use an accessible SVG icon instead of × character
+            delBtn.innerHTML = `
+              <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            `;
+            delBtn.setAttribute('aria-label', 'Unregister participant');
+            delBtn.addEventListener("click", async (e) => {
+              e.stopPropagation();
+              const activityName = li.dataset.activity;
+              const email = li.dataset.email;
+
+              try {
+                const resp = await fetch(
+                  `/activities/${encodeURIComponent(activityName)}/participants?email=${encodeURIComponent(email)}`,
+                  { method: "DELETE" }
+                );
+
+                if (resp.ok) {
+                  // remove from DOM and refresh activities to update counts
+                  li.remove();
+                  // refresh full activities UI to update availability and participant lists
+                  fetchActivities();
+                } else {
+                  const err = await resp.json();
+                  console.error("Failed to unregister:", err);
+                  alert(err.detail || "Failed to unregister participant.");
+                }
+              } catch (err) {
+                console.error("Error unregistering:", err);
+                alert("Network error while unregistering participant.");
+              }
+            });
+
+            li.appendChild(delBtn);
             ul.appendChild(li);
           });
           participantsContainer.appendChild(ul);
@@ -107,6 +151,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        // Refresh activities UI so the new participant appears immediately
+        fetchActivities();
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";

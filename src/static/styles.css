@@ -157,8 +157,9 @@ footer {
 }
 
 .participants-list {
-  margin-left: 20px; /* keep natural bullet indentation */
-  padding-left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none; /* hide bullet points */
 }
 
 .participant-item {
@@ -166,7 +167,33 @@ footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  list-style-position: outside;
+  padding: 6px 4px;
+}
+
+.participant-delete {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #c62828;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.participant-delete svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.participant-delete:hover {
+  color: #ff1744;
+  background-color: rgba(255, 23, 68, 0.06);
 }
 
 .avatar {
