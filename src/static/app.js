@@ -4,6 +4,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
 
+  // Helper: obtener iniciales desde un email (parte antes de @)
+  function getInitialsFromEmail(email) {
+    if (!email) return "?";
+    const local = email.split("@")[0] || email;
+    const parts = local.split(/[.\-_]/).filter(Boolean);
+    if (parts.length === 0) return local.slice(0, 2).toUpperCase();
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   // Function to fetch activities from API
   async function fetchActivities() {
     try {
@@ -25,6 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <div class="participants">
+            <h5>Participants</h5>
+            <div class="participants-content"></div>
+          </div>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -34,6 +48,37 @@ document.addEventListener("DOMContentLoaded", () => {
         option.value = name;
         option.textContent = name;
         activitySelect.appendChild(option);
+
+        // --- NEW: populate participants inside the card ---
+        const participantsContainer = activityCard.querySelector(".participants-content");
+
+        if (!details.participants || details.participants.length === 0) {
+          const noPart = document.createElement("p");
+          noPart.className = "no-participants";
+          noPart.textContent = "No participants yet.";
+          participantsContainer.appendChild(noPart);
+        } else {
+          const ul = document.createElement("ul");
+          ul.className = "participants-list";
+          details.participants.forEach((pEmail) => {
+            const li = document.createElement("li");
+            li.className = "participant-item";
+
+            const avatar = document.createElement("span");
+            avatar.className = "avatar";
+            avatar.textContent = getInitialsFromEmail(pEmail);
+
+            const emailSpan = document.createElement("span");
+            emailSpan.className = "participant-email";
+            emailSpan.textContent = pEmail;
+
+            li.appendChild(avatar);
+            li.appendChild(emailSpan);
+            ul.appendChild(li);
+          });
+          participantsContainer.appendChild(ul);
+        }
+        // --- end new participants code ---
       });
     } catch (error) {
       activitiesList.innerHTML = "<p>Failed to load activities. Please try again later.</p>";
